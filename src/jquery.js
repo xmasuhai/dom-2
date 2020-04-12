@@ -1,4 +1,4 @@
-window.$ = window.jQuery = function (selectorOrArrayOrTemplate) {
+window.$ = window.jQuery = function(selectorOrArrayOrTemplate) {
     /* 创建节点的函数 */
     function createElement(string) {
         const container = document.createElement("template")
@@ -7,7 +7,7 @@ window.$ = window.jQuery = function (selectorOrArrayOrTemplate) {
     }
     /* 内部操作的对象elements 负责接受存储 selectorOrArrayOrTemplate 的不同形式 即重载 */
     let elements
-    /* 字符串形式 1.创建标签，以左箭头开始 代表标签名的字符串 2. 选择器语法来查找标签（元素） 以包含各种选择器符号或开头（# . > [] ）  */
+        /* 字符串形式 1.创建标签，以左箭头开始 代表标签名的字符串 2. 选择器语法来查找标签（元素） 以包含各种选择器符号或开头（# . > [] ）  */
     if (typeof selectorOrArrayOrTemplate === 'string') {
         if (selectorOrArrayOrTemplate[0] === '<') {
             // 创建 div 以传入的标签字符串 作为数组的第一项 赋值给 elements
@@ -22,8 +22,8 @@ window.$ = window.jQuery = function (selectorOrArrayOrTemplate) {
     }
     /* 创建一个对象 这个对象的 __proto__ 为括号里面的东西 */
     const api = Object.create(jQuery.prototype)
-    /* 相当于 */
-    // const api = {__proto__: jQuery.prototype}
+        /* 相当于 */
+        // const api = {__proto__: jQuery.prototype}
 
     /* 返回 api 非共用属性 */
     // return {
@@ -32,18 +32,26 @@ window.$ = window.jQuery = function (selectorOrArrayOrTemplate) {
     //     /* 不推荐的写法 */
     //     __proto__ = jQuery.prototype
     // }
-    api.elements = elements
-    api.oldApi = selectorOrArrayOrTemplate.oldApi
+    /* Object.assign(obj,{})  将第二个形参中的属性一个一个复制到前面的对象中 浅拷贝 */
+    Object.assign(api, {
+            elements: elements,
+            oldApi: selectorOrArrayOrTemplate.oldApi
+        })
+        // api.elements = elements
+        // api.oldApi = selectorOrArrayOrTemplate.oldApi
     return api
 }
 
 /*  用来操作elements */
-jQuery.prototype = {
-    constructor: jQuery,
+/*  源码中用jQuery.fn 代替jQuery.prototype */
+jQuery.fn = jQuery.prototype = {
+    constructor: jQuery, // prototype 需要构造函数
     jquery: true, // 共用属性
     /* 读取下标 */
     get(index) {
-        return elements[index]
+        // return elements[index] // 这样访问不到 elements 注意它的作用域 // api.elements = elements
+        return this.elements[index] // this 就是 api // 把elements 的操作都改成 this.elements
+            // api 作为桥梁 用 this 去访问 api
     },
     /* 将匹配的元素插入到目标元素的最后面（内部插入） */
     appendTo(node) {
