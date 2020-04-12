@@ -1,179 +1,111 @@
-window.jQuery = function (selectorOrArray) {
-    // this.console.log('我是jQuery')
-    // 核心代码 接受一个选择器；
-    // 根据选择器得到 一些元素；
-    // 返回一个对象 这个对象 上有个方法 可以操作 这些元素
-
-    /* 重载判断
-     ** selectorOrArray不仅接受选择器 还有数组
-     */
-    let elements // 作用域的提升  用const声明的的时候必须直接赋值且不能再改
-    if (typeof selectorOrArray === 'string') {
-        // const elements = document.querySelectorAll(selectorOrArray)
-        elements = document.querySelectorAll(selectorOrArray)
-    } else if (selectorOrArray instanceof Array) {
-        // const elements = selectorOrArray // 作用域的提升
-        elements = selectorOrArray
+window.$ = window.jQuery = function (selectorOrArrayOrTemplate) {
+    /* 创建节点的函数 */
+    function createElement(string) {
+        const container = document.createElement("template")
+        container.innerHTML = string.trim()
+        return container.content.firstChild
     }
-    // 用const防止引用被修改
-    // return elements // 不返回此对象
-    // 而是返回一个 API 可以操作 elements
-    /*
-    const api_test = {
-            //ES6
-            doSth() {
-                console.log(elements) // 闭包：函数访问外部 变量
-            },
-            // ES5
-            "doOther": function () {
-                console.log(elements)
-            }
-        }
-    */
-    /*
-    const api = {
-        addClass(className) {
-            // 遍历所有刚才获取的elements 元素，添加 .className 样式
-            for (let i = 0; i < elements.length; i++) {
-                elements[i].classList.add(className)
-            }
-            return this // api
-        }
-    }
-        return api // 这里的 this 是 window // window.jQuery
-        // api 的名字其实没有必要 直接返回对象
-     */
-    // api 的名字没有必要 直接返回对象本身
-    // api 对象通常可以在外部的环境中 创建
-    // JQ的核心思想
-    // 提供一个函数 这个函数接收一个CSS选择器
-    // 通过选择器，获取到一些元素 但并不返回元素
-    // 而是返回一个对象 这个对象里包含一些方法（函数）
-    // 这些方法（函数）去操作获取到的元素
-    // 即用闭包维持 函数外的变量 防止被回收机制删除
-    // 创建的JQ对象 api 作为返回值 从前面传递到后面 来链式调用
-    // 调用后 才知道 this 的具体指向
-    // 直接创建匿名的对象 进行链式操作 声明一个对象紧接再调用它 且只用到一次 省略变量名
-    // 省略中间过程 留下最简练代码
-    return {
-        find(selector) {
-            let arr = []
-            for (let i = 0; i < elements.length; i++) {
-                const elements2 = Array.from(elements[i].querySelectorAll(selector))
-                arr = arr.concat(elements2)
-            }
-            // elements = arr // 当在改变elements的时候，会影响之前所有保留api对象的引用
-            // return this // 返回的是数组 无法进行链式调用
-            // return newApi // 不能用原来的api对象 需要更新 api引用
-            //
-            // const newApi = jQuery(arr) //不能用原来的api对象，需要用jQuery构造一个新的api
-            // return newApi
-            arr.oldApi = this // this是旧的api // oldApi是否只放到数组上 而未放到api上
-            return jQuery(arr)
-        },
-        each(fn) { // 遍历当前所有元素 即forEach()方法
-            for (let i = 0; i < elements.length; i++) {
-                fn.call(null, elements[i], i)
-            }
-            return this // this就是这个被省略掉的、匿名的api
-        },
-        print() {
-            console.log(elements) // elements就是对应的元素们
-        },
-        parent() {
-            const array = []
-            /* this 就是当前这个被省略掉的api */
-            this.each((node) => {
-                /* 不重复同样的节点 */
-                // if (array.indexOf(node.parentNode) >= 0) // 第0个 或 第一个 有就不push
-                if (array.indexOf(node.parentNode) === -1) { // 第0个 或 第一个 有就不push
-                    array.push(node.parentNode) // 没有才push
-                }
-            })
-            return jQuery(array)
-        },
-        children() {
-            const array = []
-            /* this 就是当前这个被省略掉的api */
-            this.each((node) => { // 遍历 每次 对于每个元素 获取子节点 把不同的放入数组
-                // array.push(node.children) // 没有把数组摊平 有不同结构
-                array.push(...node.children) // 展开操作符... 拆开所有元素 并且合并为一个数组
-                // 等价于 array.push(node.children[0], node.children[1],...[2]...)
-            })
-            return jQuery(array)
-        },
-        addClass(className) {
-            /* 遍历所有刚才获取的elements 元素，添加 .className 样式 */
-            for (let i = 0; i < elements.length; i++) {
-                elements[i].classList.add(className)
-            }
-            return this
-        },
-        oldApi: selectorOrArray.oldApi, // 将oldApi属性加到selectorOrArray上
-        end() {
-            return this.oldApi // this是新的api2
-        }
-    }
-}
-
-window.jQuery2 = function (selectorOrArray) {
+    /* 内部操作的对象elements 负责接受存储 selectorOrArrayOrTemplate 的不同形式 即重载 */
     let elements
-    if (typeof selectorOrArray === 'string') {
-        elements = document.querySelectorAll(selectorOrArray)
-    } else if (selectorOrArray instanceof Array) {
-        elements = selectorOrArray
-    }
-    return {
-        addClass(className) {
-            this.each((node) => {
-                node.classList.add(className)
-            })
-            return this
-        },
-        find(selector) {
-            let arr = []
-            this.each((node) => {
-                const elements2 = Array.from(node.querySelectorAll(selector))
-                arr = arr.concat(elements2)
-            })
-            arr.oldApi = this // this是旧的api // oldApi是否只放到数组上 而未放到api上
-            return jQuery(arr)
-        },
-        each(fn) {
-            for (let i = 0; i < elements.length; i++) {
-                fn.call(null, elements[i], i)
-            }
-            return this
+    /* 字符串形式 1.创建标签，以左箭头开始 代表标签名的字符串 2. 选择器语法来查找标签（元素） 以包含各种选择器符号或开头（# . > [] ）  */
+    if (typeof selectorOrArrayOrTemplate === 'string') {
+        if (selectorOrArrayOrTemplate[0] === '<') {
+            // 创建 div 以传入的标签字符串 作为数组的第一项 赋值给 elements
+            elements = [createElement(selectorOrArrayOrTemplate)]
+        } else {
+            // 查找 div， 以选到的节点赋值给 elements
+            elements = document.querySelectorAll(selectorOrArrayOrTemplate)
         }
+    } else if (selectorOrArrayOrTemplate instanceof Array) {
+        /* 以数组形式 遍历存储 选出符合条件的节点 在接口中 返回 jQuery(array) */
+        elements = selectorOrArrayOrTemplate
     }
+    /* 创建一个对象 这个对象的 __proto__ 为括号里面的东西 */
+    const api = Object.create(jQuery.prototype)
+    /* 相当于 */
+    // const api = {__proto__: jQuery.prototype}
+
+    /* 返回 api 非共用属性 */
+    // return {
+    //     elements: elements, // 非共用属性 操作的elements 是不同的
+    //     oldApi: selectorOrArrayOrTemplate.oldApi,
+    //     /* 不推荐的写法 */
+    //     __proto__ = jQuery.prototype
+    // }
+    api.elements = elements
+    api.oldApi = selectorOrArrayOrTemplate.oldApi
+    return api
 }
 
-window.jQuery3 = function (selectorOrArray) {
-    let elements
-    if (typeof selectorOrArray === 'string') {
-        elements = document.querySelectorAll(selectorOrArray)
-    } else if (selectorOrArray instanceof Array) {
-        elements = selectorOrArray
-    }
-    return {
-        addClass(className) {
-            this.each(n => n.classList.add(className))
-        },
-        find(selector) {
-            let array = []
-            this.each(n => {
-                array.push(...n.querySelectorAll(selector))
-            })
-            return jQuery(array)
-        },
-        each(fn) {
-            for (let i = 0; i < elements.length; i++) {
-                fn.call(null, elements[i], i)
-            }
+/*  用来操作elements */
+jQuery.prototype = {
+    constructor: jQuery,
+    jquery: true, // 共用属性
+    /* 读取下标 */
+    get(index) {
+        return elements[index]
+    },
+    /* 将匹配的元素插入到目标元素的最后面（内部插入） */
+    appendTo(node) {
+        /* 符合的元素们会被插入到由参数指定的目标的末尾 */
+        if (node instanceof Element) {
+            // 遍历 elements，对每个 el 进行 node.appendChild 操作
+            this.each(el => node.appendChild(el))
+        } else if (node.jquery === true) {
+            // 遍历 elements，对每个 el 进行 node.get(0).appendChild(el))  操作
+            this.each(el => node.get(0).appendChild(el))
         }
+    },
+    /* 在每个匹配元素里面的末尾处插入参数内容 */
+    append(children) {
+        if (children instanceof Element) {
+            this.get(0).appendChild(children)
+        } else if (children instanceof HTMLCollection) {
+            for (let i = 0; i < children.length; i++) {
+                this.get(0).appendChild(children[i])
+            }
+        } else if (children.jquery === true) {
+            children.each(node => this.get(0).appendChild(node))
+        }
+    },
+    find(selector) {
+        let arr = []
+        this.each(n => {
+            array.push(...n.querySelectorAll(selector))
+        })
+        arr.oldApi = this
+        return jQuery(arr)
+    },
+    parent() {
+        const array = []
+        this.each(n => {
+            if (array.indexOf(n.parentNode) === -1) {
+                array.push(n.parentNode)
+            }
+        })
+        return jQuery(array)
+    },
+    children() {
+        const array = []
+        this.each(n => {
+            array.push(...n.children)
+        })
+        return jQuery(array)
+    },
+    addClass(className) {
+        this.each(n => n.classList.add(className))
+        return this
+    },
+    end() {
+        return this.oldApi
+    },
+    each(fn) {
+        for (let i = 0; i < elements.length; i++) {
+            fn.call(null, elements[i], i)
+        }
+        return this
+    },
+    print() {
+        console.log(elements)
     }
 }
-
-window.$ = window.jQuery3
-
-$('#test').find('.child').addClass('red') // 请确保这句话成功执行
